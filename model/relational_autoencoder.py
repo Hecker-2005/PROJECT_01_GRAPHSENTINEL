@@ -144,10 +144,7 @@ class RelationalGraphAutoencoder(nn.Module):
         # ---------- Relation Predictions ----------
         adj_preds = self.decode_relations(z_dense)
 
-        # ---------- True adjacency ----------
-        adj_true = to_dense_adj(edge_index, batch=batch)
-
-        # split true adjacency by relation
+        # ---------- Split true adjacency by relation ----------
         adj_true_rel = []
 
         for r in range(self.num_relations):

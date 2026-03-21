@@ -157,14 +157,13 @@ def run_detect(file_path, workspace):
 
     # CHANGE 2: Load threshold stats from JSON instead of plain txt
     threshold_stats_path = os.path.join(workspace, "threshold_stats.json")
+    if not os.path.exists(threshold_stats_path):
+        raise RuntimeError(
+            "No threshold_stats.json found. "
+            "Please run --mode train before detect."
+        )
     with open(threshold_stats_path) as f:
-        if not os.path.exists(threshold_stats_path):
-            raise RuntimeError(
-                "No threshold_stats.json found. "
-                "Please run --mode train before detect."
-            )
-        with open(threshold_stats_path) as f:
-            stats = json.load(f)
+        stats = json.load(f)
 
     threshold = stats["threshold"]
 

@@ -46,6 +46,12 @@ def reconstruction_loss(output, data,
 
         true = (true > 0).float()
 
+        # Fix: pad true to match pred shape if sizes differ
+        if true.shape != pred.shape:
+            pad = pred.shape[-1] - true.shape[-1]
+            if pad > 0:
+                true = F.pad(true, (0, pad, 0, pad))
+
         pred_valid = pred[mask_2d]
         true_valid = true[mask_2d]
 

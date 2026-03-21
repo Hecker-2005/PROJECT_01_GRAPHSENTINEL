@@ -36,7 +36,7 @@ def train_model(train_dataset, val_dataset, input_dim, device,
     )
 
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode='min', factor=0.5, patience=5, verbose=True
+        optimizer, mode='min', factor=0.5, patience=5
     )
 
     best_val_loss = float("inf")

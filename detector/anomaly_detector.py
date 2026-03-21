@@ -33,7 +33,7 @@ class VulnerabilityDetector:
         if num_nodes < 8:
             return {
                 "vulnerable": False,
-                "overall_score": 0.0,   # suppress score for tiny graphs
+                "overall_score": 0.0,
                 "localization": {
                     "anomalous_node_idx": -1,
                     "node_anomaly_score": 0.0,
@@ -42,55 +42,49 @@ class VulnerabilityDetector:
             }
 
         is_vulnerable = graph_score > self.threshold
-        
+
         # Find the index of the node with the highest reconstruction error
         if node_scores.numel() == 0:
             most_anomalous_node_idx = -1
-            highest_node_score = 0
+            highest_node_score = 0.0
         else:
             most_anomalous_node_idx = torch.argmax(node_scores).item()
             highest_node_score = node_scores[most_anomalous_node_idx].item()
 
-        # Safely extract the line number (using the attribute we added to graph_converter.py)
+        # Safely extract the line number
         vulnerable_line = -1
 
         if hasattr(graph, "line_number") and most_anomalous_node_idx != -1:
-            
+
             # Step 1: Try the anomalous node's own line number directly
             direct_line = graph.line_number[most_anomalous_node_idx].item()
-            
+
             if direct_line > 0:
                 vulnerable_line = direct_line
-            
+
             else:
-                # Step 2: Fall back — scan all nodes for the closest valid line number
-                # Use graph edge proximity via edge_index instead of list index
-                best_distance = 1e9
-                
-                # Build a simple neighbour set from edge_index for the anomalous node
-                neighbours = set()
-                for edge_idx in range(graph.edge_index.shape[1]):
-                    src = graph.edge_index[0, edge_idx].item()
-                    dst = graph.edge_index[1, edge_idx].item()
-                    if src == most_anomalous_node_idx:
-                        neighbours.add(dst)
-                    if dst == most_anomalous_node_idx:
-                        neighbours.add(src)
-                
+                # Step 2: Vectorized neighbour finding via edge_index
+                edges = graph.edge_index
+                mask = (edges[0] == most_anomalous_node_idx) | \
+                       (edges[1] == most_anomalous_node_idx)
+                neighbours = set(
+                    edges[0][mask].tolist() + edges[1][mask].tolist()
+                )
+                neighbours.discard(most_anomalous_node_idx)
+
                 # Prefer neighbours first, then all other nodes
                 search_order = (
                     list(neighbours) +
                     [i for i in range(graph.line_number.shape[0])
-                    if i not in neighbours and i != most_anomalous_node_idx]
+                     if i not in neighbours and i != most_anomalous_node_idx]
                 )
-                
+
                 for i in search_order:
                     line = graph.line_number[i].item()
                     if line > 0:
                         vulnerable_line = line
                         break
 
-        # Build a highly detailed, localization-aware output report
         report = {
             "vulnerable": is_vulnerable,
             "overall_score": round(graph_score, 4),
