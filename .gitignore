@@ -12,3 +12,5 @@ embeddings/
 graphsentinel_staging/
 tmp_makeself/
 GRAPHSENTINEL/
+tmp_makeself/
+*.run
