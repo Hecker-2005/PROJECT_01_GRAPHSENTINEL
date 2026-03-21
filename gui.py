@@ -11,6 +11,8 @@ import math
 import re
 from datetime import datetime
 
+import contextlib
+
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QStackedWidget,
     QVBoxLayout, QHBoxLayout, QGridLayout, QPushButton, QLabel,
@@ -1449,7 +1451,6 @@ class ScanPage(QWidget):
         self._scanning   = True
         self._cur_output = []
         proc = QProcess(self)
-
         proc.setProgram(VENV_PYTHON)
         proc.setWorkingDirectory(APP_DIR)
         proc.setArguments([
@@ -1458,18 +1459,21 @@ class ScanPage(QWidget):
             "--file", path,
             "--workspace", WORKSPACE
         ])
-        # Inherit full system environment then add joern path
         env = QProcessEnvironment.systemEnvironment()
         env.insert("PATH", APP_DIR + ":" + env.value("PATH"))
+        # Critical: pass PYTHONPATH so torch_geometric is found
+        env.insert("PYTHONPATH", "")
         proc.setProcessEnvironment(env)
-
         proc.readyReadStandardOutput.connect(
             lambda: self._cur_output.append(
-                proc.readAllStandardOutput().data().decode("utf-8", errors="replace")))
+                proc.readAllStandardOutput().data().decode(
+                    "utf-8", errors="replace")))
         proc.readyReadStandardError.connect(
             lambda: self._cur_output.append(
-                proc.readAllStandardError().data().decode("utf-8", errors="replace")))
-        proc.finished.connect(lambda _c, _s: callback("".join(self._cur_output)))
+                proc.readAllStandardError().data().decode(
+                    "utf-8", errors="replace")))
+        proc.finished.connect(
+            lambda _c, _s: callback("".join(self._cur_output)))
         proc.start()
         self._scan_proc = proc
 
@@ -2303,11 +2307,23 @@ class RetrainPage(QWidget):
         ])
         env = QProcessEnvironment.systemEnvironment()
         env.insert("PATH", APP_DIR + ":" + env.value("PATH"))
+        env.insert("PYTHONPATH", "")
         self._process.setProcessEnvironment(env)
         self._process.readyReadStandardOutput.connect(self._on_stdout)
         self._process.readyReadStandardError.connect(self._on_stderr)
         self._process.finished.connect(self._on_train_done)
         self._process.start()
+
+    def _on_train_done(self, code, _):
+        self._training = False
+        self._train_btn.setEnabled(True)
+        self._finetune_btn.setEnabled(True)
+        sep = "─" * 50
+        msg = ("✓  Training complete."
+               if code == 0
+               else f"✗  Training exited (code {code}).")
+        self._output.append(f"\n{sep}\n{msg}")
+        self.refresh()
 
     def _on_stdout(self):
         data = self._process.readAllStandardOutput().data().decode(
@@ -2326,17 +2342,6 @@ class RetrainPage(QWidget):
                 self._output.append(f"[err] {line}")
         self._output.verticalScrollBar().setValue(
             self._output.verticalScrollBar().maximum())
-
-    def _on_train_done(self, code, _):
-        self._training = False
-        self._train_btn.setEnabled(True)
-        self._finetune_btn.setEnabled(True)
-        sep = "─" * 50
-        msg = ("✓  Training complete."
-               if code == 0
-               else f"✗  Training exited (code {code}).")
-        self._output.append(f"\n{sep}\n{msg}")
-        self.refresh()
 
     def _on_back(self):
         if self._training and self._process:
