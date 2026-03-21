@@ -1,0 +1,86 @@
+┌──(.venv)(feanor㉿FEANOR-0001)-[~/Desktop/MINIPROJECT]
+└─$ python main.py --mode train --workspace ./workspace                                                                                                                                                                                     
+Loading Word2Vec...
+Loading PyG Dataset...
+Starting Training on cpu...
+Epoch 001/50 | Train Loss: 0.6283 (Feat: 0.0064, Struct: 1.5611) | Val Loss: 0.2850
+  -> New best model saved! (Val Loss: 0.2850)
+Epoch 002/50 | Train Loss: 0.2856 (Feat: 0.0040, Struct: 0.7080) | Val Loss: 0.2846
+  -> New best model saved! (Val Loss: 0.2846)
+Epoch 003/50 | Train Loss: 0.2848 (Feat: 0.0036, Struct: 0.7066) | Val Loss: 0.2844
+  -> New best model saved! (Val Loss: 0.2844)
+Epoch 004/50 | Train Loss: 0.2844 (Feat: 0.0034, Struct: 0.7059) | Val Loss: 0.2842
+  -> New best model saved! (Val Loss: 0.2842)
+Epoch 005/50 | Train Loss: 0.2842 (Feat: 0.0032, Struct: 0.7057) | Val Loss: 0.2841
+  -> New best model saved! (Val Loss: 0.2841)
+Epoch 006/50 | Train Loss: 0.2841 (Feat: 0.0031, Struct: 0.7056) | Val Loss: 0.2841
+  -> New best model saved! (Val Loss: 0.2841)
+Epoch 007/50 | Train Loss: 0.2839 (Feat: 0.0029, Struct: 0.7054) | Val Loss: 0.2840
+  -> New best model saved! (Val Loss: 0.2840)
+Epoch 008/50 | Train Loss: 0.2838 (Feat: 0.0026, Struct: 0.7054) | Val Loss: 0.2839
+  -> New best model saved! (Val Loss: 0.2839)
+Epoch 009/50 | Train Loss: 0.2837 (Feat: 0.0024, Struct: 0.7056) | Val Loss: 0.2838
+  -> New best model saved! (Val Loss: 0.2838)
+Epoch 010/50 | Train Loss: 0.2836 (Feat: 0.0023, Struct: 0.7055) | Val Loss: 0.2837
+  -> New best model saved! (Val Loss: 0.2837)
+Epoch 011/50 | Train Loss: 0.2835 (Feat: 0.0021, Struct: 0.7056) | Val Loss: 0.2835
+  -> New best model saved! (Val Loss: 0.2835)
+Epoch 012/50 | Train Loss: 0.2833 (Feat: 0.0019, Struct: 0.7054) | Val Loss: 0.2834
+  -> New best model saved! (Val Loss: 0.2834)
+Epoch 013/50 | Train Loss: 0.2833 (Feat: 0.0018, Struct: 0.7055) | Val Loss: 0.2833
+  -> New best model saved! (Val Loss: 0.2833)
+Epoch 014/50 | Train Loss: 0.2831 (Feat: 0.0017, Struct: 0.7052) | Val Loss: 0.2833
+  -> New best model saved! (Val Loss: 0.2833)
+Epoch 015/50 | Train Loss: 0.2831 (Feat: 0.0016, Struct: 0.7054) | Val Loss: 0.2832
+  -> New best model saved! (Val Loss: 0.2832)
+Epoch 016/50 | Train Loss: 0.2830 (Feat: 0.0015, Struct: 0.7053) | Val Loss: 0.2832
+  -> New best model saved! (Val Loss: 0.2832)
+Epoch 017/50 | Train Loss: 0.2831 (Feat: 0.0015, Struct: 0.7054) | Val Loss: 0.2832
+  -> New best model saved! (Val Loss: 0.2832)
+Epoch 018/50 | Train Loss: 0.2829 (Feat: 0.0015, Struct: 0.7049) | Val Loss: 0.2832
+Epoch 019/50 | Train Loss: 0.2829 (Feat: 0.0015, Struct: 0.7051) | Val Loss: 0.2832
+Epoch 020/50 | Train Loss: 0.2830 (Feat: 0.0015, Struct: 0.7053) | Val Loss: 0.2832
+  -> New best model saved! (Val Loss: 0.2832)
+Epoch 021/50 | Train Loss: 0.2829 (Feat: 0.0014, Struct: 0.7050) | Val Loss: 0.2832
+  -> New best model saved! (Val Loss: 0.2832)
+Epoch 022/50 | Train Loss: 0.2830 (Feat: 0.0014, Struct: 0.7054) | Val Loss: 0.2832
+Epoch 023/50 | Train Loss: 0.2829 (Feat: 0.0014, Struct: 0.7052) | Val Loss: 0.2832
+Epoch 024/50 | Train Loss: 0.2829 (Feat: 0.0014, Struct: 0.7050) | Val Loss: 0.2832
+Epoch 025/50 | Train Loss: 0.2829 (Feat: 0.0014, Struct: 0.7052) | Val Loss: 0.2832
+  -> New best model saved! (Val Loss: 0.2832)
+Epoch 026/50 | Train Loss: 0.2829 (Feat: 0.0014, Struct: 0.7052) | Val Loss: 0.2832
+Epoch 027/50 | Train Loss: 0.2829 (Feat: 0.0014, Struct: 0.7052) | Val Loss: 0.2832
+  -> New best model saved! (Val Loss: 0.2832)
+Epoch 028/50 | Train Loss: 0.2829 (Feat: 0.0014, Struct: 0.7051) | Val Loss: 0.2832
+Epoch 029/50 | Train Loss: 0.2829 (Feat: 0.0014, Struct: 0.7052) | Val Loss: 0.2832
+Epoch 030/50 | Train Loss: 0.2829 (Feat: 0.0014, Struct: 0.7052) | Val Loss: 0.2832
+Epoch 031/50 | Train Loss: 0.2828 (Feat: 0.0014, Struct: 0.7049) | Val Loss: 0.2832
+Epoch 032/50 | Train Loss: 0.2831 (Feat: 0.0014, Struct: 0.7055) | Val Loss: 0.2832
+  -> New best model saved! (Val Loss: 0.2832)
+Epoch 033/50 | Train Loss: 0.2829 (Feat: 0.0014, Struct: 0.7053) | Val Loss: 0.2832
+Epoch 034/50 | Train Loss: 0.2829 (Feat: 0.0014, Struct: 0.7050) | Val Loss: 0.2832
+Epoch 035/50 | Train Loss: 0.2828 (Feat: 0.0014, Struct: 0.7050) | Val Loss: 0.2832
+Epoch 036/50 | Train Loss: 0.2828 (Feat: 0.0014, Struct: 0.7049) | Val Loss: 0.2832
+Epoch 037/50 | Train Loss: 0.2829 (Feat: 0.0014, Struct: 0.7050) | Val Loss: 0.2832
+  -> New best model saved! (Val Loss: 0.2832)
+Epoch 038/50 | Train Loss: 0.2829 (Feat: 0.0014, Struct: 0.7052) | Val Loss: 0.2832
+Epoch 039/50 | Train Loss: 0.2828 (Feat: 0.0014, Struct: 0.7049) | Val Loss: 0.2832
+Epoch 040/50 | Train Loss: 0.2828 (Feat: 0.0014, Struct: 0.7048) | Val Loss: 0.2832
+Epoch 041/50 | Train Loss: 0.2829 (Feat: 0.0014, Struct: 0.7053) | Val Loss: 0.2832
+Epoch 042/50 | Train Loss: 0.2829 (Feat: 0.0014, Struct: 0.7050) | Val Loss: 0.2832
+Epoch 043/50 | Train Loss: 0.2830 (Feat: 0.0014, Struct: 0.7052) | Val Loss: 0.2832
+Epoch 044/50 | Train Loss: 0.2830 (Feat: 0.0014, Struct: 0.7054) | Val Loss: 0.2832
+Epoch 045/50 | Train Loss: 0.2830 (Feat: 0.0014, Struct: 0.7053) | Val Loss: 0.2832
+Epoch 046/50 | Train Loss: 0.2829 (Feat: 0.0014, Struct: 0.7052) | Val Loss: 0.2832
+Epoch 047/50 | Train Loss: 0.2829 (Feat: 0.0014, Struct: 0.7052) | Val Loss: 0.2832
+Epoch 048/50 | Train Loss: 0.2829 (Feat: 0.0014, Struct: 0.7051) | Val Loss: 0.2832
+Epoch 049/50 | Train Loss: 0.2830 (Feat: 0.0014, Struct: 0.7053) | Val Loss: 0.2832
+Epoch 050/50 | Train Loss: 0.2829 (Feat: 0.0014, Struct: 0.7052) | Val Loss: 0.2832
+
+Training Complete. Best Validation Loss: 0.2832
+Model saved to: ./workspace/model.pt
+Calculating Anomaly Threshold...
+--- Threshold Calibration ---
+Safe Code Mean Error: 0.2795 ± 0.0038
+Setting Anomaly Threshold at 95th percentile: 0.2897
+Threshold saved.

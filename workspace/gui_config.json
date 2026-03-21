@@ -1,0 +1,10 @@
+{
+  "threshold_percentile": 90,
+  "epochs": 50,
+  "batch_size": 16,
+  "max_files_per_cwe": 100,
+  "alpha": 0.2,
+  "beta": 0.2,
+  "gamma": 0.3,
+  "delta": 0.3
+}

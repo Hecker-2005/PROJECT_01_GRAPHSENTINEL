@@ -1,0 +1,14 @@
+workspace/graphs/
+workspace/temp_detect/
+workspace/cpg/
+workspace/json/
+data/safe/
+.venv/
+__pycache__/
+*.bin
+*.pt
+embeddings/
+*.deb
+graphsentinel_staging/
+tmp_makeself/
+GRAPHSENTINEL/
