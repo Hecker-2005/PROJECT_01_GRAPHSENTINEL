@@ -1,81 +1,113 @@
 #!/usr/bin/env bash
-# build.sh — builds GRAPHSENTINEL.deb installer package
+# build.sh — assembles the GRAPHSENTINEL self-extracting installer (makeself .run)
 set -e
 
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
+STAGING="$PROJECT_DIR/graphsentinel_staging"
 JOERN_SRC="/home/feanor/bin/joern/joern-cli"
-PKG_NAME="graphsentinel"
-PKG_VERSION="1.0"
-PKG_ARCH="amd64"
-DEB_DIR="$PROJECT_DIR/${PKG_NAME}_${PKG_VERSION}_${PKG_ARCH}"
-INSTALL_DIR="$DEB_DIR/opt/GRAPHSENTINEL"
 
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║     GRAPHSENTINEL — .deb Package Builder                     ║"
+echo "║     GRAPHSENTINEL — .run Installer Builder                   ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 echo "Project : $PROJECT_DIR"
-echo "Package : $DEB_DIR"
+echo "Staging : $STAGING"
 echo ""
 
-# ── Check dpkg-deb is available ──────────────────────────
-if ! command -v dpkg-deb &>/dev/null; then
-    echo "Installing dpkg-deb..."
-    sudo apt-get install -y dpkg
-fi
-
-# ── Clean previous build ─────────────────────────────────
-echo "[1/9] Cleaning previous build..."
-rm -rf "$DEB_DIR"
-rm -f "$PROJECT_DIR/${PKG_NAME}_${PKG_VERSION}_${PKG_ARCH}.deb"
-
-# ── Create .deb directory structure ──────────────────────
-echo "[2/9] Creating package structure..."
-mkdir -p "$DEB_DIR/DEBIAN"
-mkdir -p "$INSTALL_DIR/app"
-mkdir -p "$INSTALL_DIR/app/workspace/graphs"
-mkdir -p "$INSTALL_DIR/app/workspace/scan_logs"
-mkdir -p "$INSTALL_DIR/app/data/safe"
-mkdir -p "$INSTALL_DIR/app/embeddings"
-mkdir -p "$DEB_DIR/usr/share/applications"
-mkdir -p "$DEB_DIR/usr/share/icons/hicolor/scalable/apps"
-mkdir -p "$DEB_DIR/usr/local/bin"
+# ── Clean staging ────────────────────────────────────────
+echo "[1/7] Cleaning staging area..."
+rm -rf "$STAGING"
+mkdir -p "$STAGING/app"
 
 # ── Copy Python source files ─────────────────────────────
-echo "[3/9] Copying Python source..."
-cp "$PROJECT_DIR/gui.py"                 "$INSTALL_DIR/app/"
-cp "$PROJECT_DIR/main.py"                "$INSTALL_DIR/app/"
-cp "$PROJECT_DIR/prep_word2vec.py"       "$INSTALL_DIR/app/"
-cp "$PROJECT_DIR/extract_juliet_safe.py" "$INSTALL_DIR/app/"
-cp "$PROJECT_DIR/requirements.txt"       "$INSTALL_DIR/app/"
+echo "[2/7] Copying Python source..."
+cp "$PROJECT_DIR/gui.py"                 "$STAGING/app/"
+cp "$PROJECT_DIR/main.py"                "$STAGING/app/"
+cp "$PROJECT_DIR/prep_word2vec.py"       "$STAGING/app/"
+cp "$PROJECT_DIR/extract_juliet_safe.py" "$STAGING/app/"
+cp "$PROJECT_DIR/requirements.txt"       "$STAGING/app/"
 
 for dir in dataset model trainer detector parser_pipeline; do
-    cp -r "$PROJECT_DIR/$dir" "$INSTALL_DIR/app/$dir"
+    cp -r "$PROJECT_DIR/$dir" "$STAGING/app/$dir"
 done
 
 # ── Copy embeddings ──────────────────────────────────────
-echo "[4/9] Copying Word2Vec embeddings..."
-cp -r "$PROJECT_DIR/embeddings/." "$INSTALL_DIR/app/embeddings/"
+echo "[3/7] Copying Word2Vec embeddings..."
+mkdir -p "$STAGING/app/embeddings"
+cp -r "$PROJECT_DIR/embeddings/." "$STAGING/app/embeddings/"
 
 # ── Copy workspace artifacts ─────────────────────────────
-echo "[5/9] Copying workspace artifacts..."
+echo "[4/7] Copying workspace artifacts..."
+mkdir -p "$STAGING/app/workspace/graphs"
+mkdir -p "$STAGING/app/workspace/scan_logs"
+
 for f in model.pt threshold.txt threshold_stats.json \
           gui_config.json training_history.json; do
     [ -f "$PROJECT_DIR/workspace/$f" ] && \
-        cp "$PROJECT_DIR/workspace/$f" "$INSTALL_DIR/app/workspace/"
+        cp "$PROJECT_DIR/workspace/$f" "$STAGING/app/workspace/"
 done
 
 echo "    Copying graphs (may take a moment)..."
-cp -r "$PROJECT_DIR/workspace/graphs/." "$INSTALL_DIR/app/workspace/graphs/"
+cp -r "$PROJECT_DIR/workspace/graphs/." "$STAGING/app/workspace/graphs/"
 
 echo "    Copying safe dataset..."
-cp -r "$PROJECT_DIR/data/safe/." "$INSTALL_DIR/app/data/safe/"
+mkdir -p "$STAGING/app/data/safe"
+cp -r "$PROJECT_DIR/data/safe/." "$STAGING/app/data/safe/"
 
 # ── Bundle Joern ─────────────────────────────────────────
-echo "[6/9] Bundling Joern CLI..."
-cp -r "$JOERN_SRC" "$INSTALL_DIR/app/joern-cli"
+echo "[5/7] Bundling Joern CLI..."
+cp -r "$JOERN_SRC" "$STAGING/app/joern-cli"
 
-# ── Create Joern wrapper scripts ─────────────────────────
+# ── Write install.sh ─────────────────────────────────────
+echo "[6/7] Writing installer script..."
+
+cat > "$STAGING/install.sh" << 'INSTALL_EOF'
+#!/usr/bin/env bash
+set -e
+
+INSTALL_DIR="/opt/GRAPHSENTINEL"
+LAUNCHER="$INSTALL_DIR/graphsentinel.sh"
+DESKTOP_DIR="$HOME/.local/share/applications"
+ICON_DIR="$HOME/.local/share/icons"
+VENV_DIR="$INSTALL_DIR/venv"
+
+echo ""
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║     GRAPHSENTINEL — Installer                                ║"
+echo "║     INTELLIGENT SYSTEM-CENTRIC ZERO-DAY THREAT DETECTION    ║"
+echo "╚══════════════════════════════════════════════════════════════╝"
+echo ""
+
+# ── Dependency checks ────────────────────────────────────
+echo "Checking dependencies..."
+MISSING=()
+if ! command -v java &> /dev/null; then MISSING+=("default-jre"); fi
+if ! command -v python3 &> /dev/null; then MISSING+=("python3"); fi
+if ! command -v pip3 &> /dev/null; then MISSING+=("python3-pip"); fi
+if ! dpkg -l python3-venv &> /dev/null 2>&1; then MISSING+=("python3-venv"); fi
+if ! dpkg -l python3-pyqt5 &> /dev/null 2>&1; then MISSING+=("python3-pyqt5"); fi
+
+if [ ${#MISSING[@]} -gt 0 ]; then
+    echo "Installing missing system dependencies: ${MISSING[*]}"
+    sudo apt-get update -qq
+    sudo apt-get install -y "${MISSING[@]}"
+fi
+echo "All system dependencies satisfied."
+echo ""
+
+# ── Create install directory ─────────────────────────────
+echo "[1/6] Creating install directory at $INSTALL_DIR..."
+sudo mkdir -p "$INSTALL_DIR"
+sudo chown "$USER":"$USER" "$INSTALL_DIR"
+
+# ── Copy app files ───────────────────────────────────────
+echo "[2/6] Copying application files..."
+cp -r app/. "$INSTALL_DIR/app"
+
+# ── Configure Joern ──────────────────────────────────────
+echo "[3/6] Configuring Joern..."
+find "$INSTALL_DIR/app/joern-cli" -type f | xargs chmod +x 2>/dev/null || true
+
 cat > "$INSTALL_DIR/app/joern-parse" << 'JOERN_EOF'
 #!/usr/bin/env bash
 exec "$(dirname "$0")/joern-cli/joern-parse" "$@"
@@ -88,31 +120,60 @@ JOERN_EOF
 
 chmod +x "$INSTALL_DIR/app/joern-parse"
 chmod +x "$INSTALL_DIR/app/joern-export"
-chmod +x "$INSTALL_DIR/app/joern-cli/"*
 
-# ── Create launcher script ────────────────────────────────
-echo "[7/9] Creating launcher..."
+# ── Create Python venv and install deps ──────────────────
+echo "[4/6] Creating Python virtual environment..."
+echo "    Installing CPU-only PyTorch (no CUDA — saves ~5GB)."
+echo "    Requires internet. May take 5-10 minutes..."
+echo ""
 
-cat > "$INSTALL_DIR/graphsentinel.sh" << 'LAUNCH_EOF'
+python3 -m venv "$VENV_DIR"
+"$VENV_DIR/bin/pip" install --upgrade pip --quiet
+
+# Install CPU-only PyTorch first
+"$VENV_DIR/bin/pip" install \
+    torch==2.10.0 torchvision==0.25.0 torchaudio==2.10.0 \
+    --index-url https://download.pytorch.org/whl/cpu \
+    --quiet \
+    --progress-bar on
+
+# Install remaining requirements
+# Skip only the 3 torch packages already installed above
+grep -vE "^torch==|^torchaudio==|^torchvision==" \
+    "$INSTALL_DIR/app/requirements.txt" > /tmp/gs_reqs.txt
+"$VENV_DIR/bin/pip" install \
+    --requirement /tmp/gs_reqs.txt \
+    --quiet \
+    --progress-bar on
+rm -f /tmp/gs_reqs.txt
+
+echo ""
+echo "Python environment ready."
+
+# ── Create launcher ──────────────────────────────────────
+echo "[5/6] Creating launcher..."
+
+cat > "$LAUNCHER" << 'LAUNCH_EOF'
 #!/usr/bin/env bash
 INSTALL_DIR="/opt/GRAPHSENTINEL"
 APP_DIR="$INSTALL_DIR/app"
 VENV_PYTHON="$INSTALL_DIR/venv/bin/python"
 
 export PATH="$APP_DIR:$PATH"
+export PYTHONPATH=""
 
 cd "$APP_DIR"
 exec "$VENV_PYTHON" gui.py
 LAUNCH_EOF
 
-chmod +x "$INSTALL_DIR/graphsentinel.sh"
+chmod +x "$LAUNCHER"
 
-# Symlink so 'graphsentinel' works from terminal
-ln -sf "/opt/GRAPHSENTINEL/graphsentinel.sh" \
-       "$DEB_DIR/usr/local/bin/graphsentinel"
+# ── Desktop entry + icon ─────────────────────────────────
+echo "[6/6] Creating desktop entry..."
+mkdir -p "$DESKTOP_DIR"
+mkdir -p "$ICON_DIR"
 
-# ── Create SVG icon ───────────────────────────────────────
-cat > "$DEB_DIR/usr/share/icons/hicolor/scalable/apps/graphsentinel.svg" << 'SVG_EOF'
+cat > "$ICON_DIR/graphsentinel.svg" << 'SVG_EOF'
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <rect width="100" height="100" rx="18" fill="#0a0a0a"/>
   <circle cx="50" cy="45" r="28" fill="none"
@@ -127,87 +188,22 @@ cat > "$DEB_DIR/usr/share/icons/hicolor/scalable/apps/graphsentinel.svg" << 'SVG
 </svg>
 SVG_EOF
 
-# ── Create .desktop entry ─────────────────────────────────
-cat > "$DEB_DIR/usr/share/applications/graphsentinel.desktop" << 'DESKTOP_EOF'
+cat > "$DESKTOP_DIR/graphsentinel.desktop" << DESKTOP_EOF
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=GRAPHSENTINEL
-GenericName=Vulnerability Detector
 Comment=Intelligent System-Centric Zero-Day Threat Detection Framework
-Exec=/opt/GRAPHSENTINEL/graphsentinel.sh
-Icon=graphsentinel
+Exec=$LAUNCHER
+Icon=$ICON_DIR/graphsentinel.svg
 Terminal=false
 Categories=Development;Security;
 Keywords=vulnerability;security;static analysis;zero-day;
 StartupNotify=true
 DESKTOP_EOF
 
-# ── Write DEBIAN/control ──────────────────────────────────
-echo "[8/9] Writing package metadata..."
-
-cat > "$DEB_DIR/DEBIAN/control" << CONTROL_EOF
-Package: $PKG_NAME
-Version: $PKG_VERSION
-Architecture: $PKG_ARCH
-Maintainer: GRAPHSENTINEL <graphsentinel@localhost>
-Depends: default-jre, python3, python3-pip, python3-venv, python3-pyqt5
-Section: security
-Priority: optional
-Description: Intelligent System-Centric Zero-Day Threat Detection Framework
- GRAPHSENTINEL is an AI-driven static vulnerability detection system
- for C/C++ code that detects zero-day vulnerabilities using graph
- anomaly detection and relational graph neural networks.
-CONTROL_EOF
-
-# ── Write DEBIAN/postinst (runs after package install) ────
-cat > "$DEB_DIR/DEBIAN/postinst" << 'POSTINST_EOF'
-#!/usr/bin/env bash
-set -e
-
-INSTALL_DIR="/opt/GRAPHSENTINEL"
-VENV_DIR="$INSTALL_DIR/venv"
-
-echo ""
-echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║  GRAPHSENTINEL — Post-Install Setup                          ║"
-echo "╚══════════════════════════════════════════════════════════════╝"
-echo ""
-
-# Determine the real user (not root)
-REAL_USER="${SUDO_USER:-$(logname 2>/dev/null || echo $USER)}"
-
-# Fix ownership so user can write to workspace
-chown -R "$REAL_USER":"$REAL_USER" "$INSTALL_DIR" 2>/dev/null || true
-
-# Fix Joern execute permissions (dpkg strips +x from bundled files)
-find "$INSTALL_DIR/app/joern-cli" -type f | xargs chmod +x
-chmod +x "$INSTALL_DIR/app/joern-parse"
-chmod +x "$INSTALL_DIR/app/joern-export"
-
-echo "Setting up Python virtual environment..."
-echo "Requires internet. May take 5-10 minutes."
-echo ""
-
-sudo -u "$REAL_USER" python3 -m venv "$VENV_DIR"
-# Install CPU-only PyTorch first (saves ~5GB vs CUDA version)
-sudo -u "$REAL_USER" "$VENV_DIR/bin/pip" install \
-    torch torchvision torchaudio \
-    --index-url https://download.pytorch.org/whl/cpu \
-    --quiet \
-    --progress-bar on
-
-# Then install remaining requirements (skip torch lines)
-grep -v "^torch" "$INSTALL_DIR/app/requirements.txt" > /tmp/gs_reqs.txt
-sudo -u "$REAL_USER" "$VENV_DIR/bin/pip" install \
-    --requirement /tmp/gs_reqs.txt \
-    --quiet \
-    --progress-bar on
-rm -f /tmp/gs_reqs.txt
-
-# Update icon and desktop caches
-gtk-update-icon-cache /usr/share/icons/hicolor 2>/dev/null || true
-update-desktop-database /usr/share/applications 2>/dev/null || true
+chmod +x "$DESKTOP_DIR/graphsentinel.desktop"
+update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
 
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
@@ -215,43 +211,37 @@ echo "║  Installation Complete!                                      ║"
 echo "║                                                              ║"
 echo "║  Launch GRAPHSENTINEL from:                                  ║"
 echo "║  • Application menu → GRAPHSENTINEL                         ║"
-echo "║  • Terminal: graphsentinel                                   ║"
+echo "║  • Terminal: /opt/GRAPHSENTINEL/graphsentinel.sh             ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
-POSTINST_EOF
+INSTALL_EOF
 
-chmod 755 "$DEB_DIR/DEBIAN/postinst"
+chmod +x "$STAGING/install.sh"
 
-# ── Write DEBIAN/prerm (runs before uninstall) ────────────
-cat > "$DEB_DIR/DEBIAN/prerm" << 'PRERM_EOF'
-#!/usr/bin/env bash
-set -e
-echo "Removing GRAPHSENTINEL..."
-rm -rf /opt/GRAPHSENTINEL
-PRERM_EOF
+# ── Check staging size ───────────────────────────────────
+echo ""
+echo "Staging area size:"
+du -sh "$STAGING"
+echo ""
 
-chmod 755 "$DEB_DIR/DEBIAN/prerm"
+# ── Build .run ───────────────────────────────────────────
+echo "[7/7] Building self-extracting installer..."
+echo "      (compressing — be patient)"
 
-# ── Set correct permissions ───────────────────────────────
-echo "[9/9] Setting permissions and building .deb..."
-find "$DEB_DIR" -type f | xargs chmod 644
-find "$DEB_DIR" -type d | xargs chmod 755
+export TMPDIR="$PROJECT_DIR/tmp_makeself"
+mkdir -p "$TMPDIR"
 
-# Restore execute bits
-chmod 755 "$INSTALL_DIR/graphsentinel.sh"
-chmod 755 "$INSTALL_DIR/app/joern-parse"
-chmod 755 "$INSTALL_DIR/app/joern-export"
-chmod 755 "$INSTALL_DIR/app/joern-cli/"*
-chmod 755 "$DEB_DIR/DEBIAN/postinst"
-chmod 755 "$DEB_DIR/DEBIAN/prerm"
-# chmod 755 "$DEB_DIR/usr/local/bin/graphsentinel"
+TMPDIR="$PROJECT_DIR/tmp_makeself" makeself \
+    --gzip \
+    --nomd5 \
+    "$STAGING" \
+    "$PROJECT_DIR/GRAPHSENTINEL_Installer.run" \
+    "GRAPHSENTINEL — Zero-Day Threat Detection" \
+    "./install.sh"
 
-# ── Build the .deb ────────────────────────────────────────
-dpkg-deb --build --root-owner-group "$DEB_DIR" \
-    "$PROJECT_DIR/${PKG_NAME}_${PKG_VERSION}_${PKG_ARCH}.deb"
-
-# ── Cleanup build directory ───────────────────────────────
-rm -rf "$DEB_DIR"
+# Cleanup
+rm -rf "$TMPDIR"
+rm -rf "$STAGING"
 
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
@@ -259,12 +249,14 @@ echo "║  Build Complete!                                             ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 echo "Output:"
-du -sh "$PROJECT_DIR/${PKG_NAME}_${PKG_VERSION}_${PKG_ARCH}.deb"
+du -sh "$PROJECT_DIR/GRAPHSENTINEL_Installer.run"
 echo ""
-echo "To install — just double-click the .deb file!"
-echo "OR from terminal:"
-echo "  sudo dpkg -i graphsentinel_1.0_amd64.deb"
+echo "To install:"
+echo "  chmod +x GRAPHSENTINEL_Installer.run"
+echo "  ./GRAPHSENTINEL_Installer.run"
 echo ""
 echo "To uninstall:"
-echo "  sudo apt remove graphsentinel"
+echo "  sudo rm -rf /opt/GRAPHSENTINEL"
+echo "  rm -f ~/.local/share/applications/graphsentinel.desktop"
+echo "  rm -f ~/.local/share/icons/graphsentinel.svg"
 echo ""
