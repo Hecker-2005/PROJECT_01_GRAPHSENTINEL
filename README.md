@@ -1,3 +1,7 @@
+
+GRAPHSENTINEL - INTELLIGENT SYSTEM-CENTRIC ZERO-DAY THREAT DETECTION FRAMEWORK 
+
+TABLE OF CONTENTS
 PART I   — FOUNDATIONS AND MOTIVATION    
 	Section 1  : Problem Statement and Motivation   
 	Section 2  : Why Graph-Based Approaches   
